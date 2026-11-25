@@ -1,0 +1,7 @@
+project_id = "virtual-school"
+
+[storage]
+file_size_limit = "200MB"
+
+[functions.storytelling]
+verify_jwt = false
