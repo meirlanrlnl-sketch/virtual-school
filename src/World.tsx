@@ -340,7 +340,7 @@ export default function World(props: WorldProps) {
           <directionalLight
             position={outside ? [-13, 20, 11] : [-3, 3.4, 2]}
             intensity={outside ? 2.05 : 1.35}
-            color="#fff1d4"
+            color={({3:"#eefaff",4:"#ffddb8",5:"#ffdda4",6:"#fff4c9",7:"#dad8ff",9:"#c9f7ff",10:"#cddaff"} as Record<number,string>)[props.room] ?? "#fff1d4"}
             castShadow={!props.low}
             shadow-mapSize={1024}
             shadow-camera-left={-20}

@@ -409,7 +409,7 @@ function App() {
   };
   const storyTitle = zones.find((item) => item.id === zone)?.title;
   return (
-    <main className={menu ? "app home" : "app exploring"}>
+    <main data-classroom={room} className={menu ? "app home" : "app exploring"}>
       <div className="world">
         <Suspense
           fallback={
@@ -431,7 +431,7 @@ function App() {
             go={go}
             interact={interact}
             openStory={openStory}
-            openLessonVideo={() => changePanel("lessonVideo")}
+            openLessonVideo={() => changePanel(posters ? "posters" : lessonVideo ? "lessonVideo" : "assignment")}
             markers={!menu && mode !== "panorama"}
             talking={panel === "guide" || storyTalking}
             pano={pano}

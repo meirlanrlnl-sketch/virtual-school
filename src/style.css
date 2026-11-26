@@ -934,3 +934,13 @@ textarea {
 .dialogue blockquote {
   font-size: 17px;
 }
+
+[data-classroom="3"] { --room-accent: #75adff }
+[data-classroom="4"] { --room-accent: #ffa66e }
+[data-classroom="5"] { --room-accent: #dec590 }
+[data-classroom="6"] { --room-accent: #aed28a }
+[data-classroom="7"] { --room-accent: #c0a3fa }
+[data-classroom="9"] { --room-accent: #76dfea }
+[data-classroom="10"] { --room-accent: #a2baff }
+.exploring dialog { border-top-color: var(--room-accent) }
+.exploring .assignment-link { color: var(--room-accent) }

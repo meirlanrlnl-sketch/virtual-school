@@ -1,4 +1,6 @@
 import { roomPosters, type RoomPosters } from "./roomPosters";
+import { GalleryPanel, SpaceWindow } from "./GalleryPanels";
+import { themes, RoomExhibits } from "./RoomExhibits";
 import { Fragment } from "react";
 import { useTexture } from "@react-three/drei";
 import { SRGBColorSpace } from "three";
@@ -12,7 +14,7 @@ import {
   Orb,
   Person,
   Planks,
-  Shelf,
+
   ink,
   wood,
   type XYZ,
@@ -229,7 +231,7 @@ function LessonScreen({
   const poster = useTexture(video.poster);
   poster.colorSpace = SRGBColorSpace;
   const width = 2.28 * poster.image.width / poster.image.height;
-  const frameColor = room === cinemaRoom ? "#641e32" : "#12263c";
+  const frameColor = room === cinemaRoom ? "#172554" : "#12263c";
   return (
     <group
       position={[0, 2, -4.79]}
@@ -243,7 +245,7 @@ function LessonScreen({
         <planeGeometry args={[width, 2.28]} />
         <meshBasicMaterial map={poster} toneMapped={false} />
       </mesh>
-      <Label p={[0, 1.4, 0.08]} w={width + 0.14} h={0.32} text={rooms[room].name[0].toUpperCase()} bg={frameColor} />
+      <Label p={[0, 1.4, 0.08]} w={width + 0.14} h={0.32} text={translate(rooms[room].name,lang)} bg={frameColor} />
       {markers && (
         <Marker p={[0, -0.87, 0.15]} action={openLessonVideo}>
           {"▶ " + translate(video.heading, lang)}
@@ -355,13 +357,8 @@ export function Interior({
   const video = roomVideos[room];
   const posters = roomPosters[room];
   const entry = room <= 2,
-    color = studio
-      ? "#e8dfd3"
-      : room === 7
-        ? "#927263"
-        : room === 6
-          ? "#769087"
-          : room === cinemaRoom ? "#534355" : "#659bc1",
+    theme = themes[room],
+    color = theme?.wall ?? (studio ? "#e8dfd3" : "#659bc1"),
     thisRoom = rooms[room];
   const corridor = room === 2;
   const spacing = corridor ? 1.5 : 3;
@@ -369,27 +366,28 @@ export function Interior({
   const guideX = corridor ? -4.85 : -1.4;
   const doorZ = entry ? -4.86 : 4.86;
   const title =
-    thisRoom.assignment?.module ?? (corridor ? "FIND YOUR CLASS" : "NOTICEBOARD");
+    (theme && translate(thisRoom.name, lang)) ?? (corridor ? "FIND YOUR CLASS" : "NOTICEBOARD");
   return (
     <>
       <color attach="background" args={["#b1cdd9"]} />
       <Box p={[0, -0.12, 0]} s={[14, 0.24, 10]} c="#ba8964" />
-      <Planks length={9.93} colors={woods} />
-      <Box p={[0, 3.73, 0]} s={[14.25, 0.18, 10.18]} c="#e4e9e5" solid />
+      {theme && room !== 5 ? <Box p={[0,.003,0]} s={[13.9,.018,9.93]} c={theme.floor}/> : <Planks length={9.93} colors={woods} />}
+      <Box p={[0, 3.73, 0]} s={[14.25, 0.18, 10.18]} c={room === 10 || room === 9 ? "#26364a" : "#e4e9e5"} solid />
       <Box p={[0, 1.82, -5]} s={[14.25, 3.65, 0.24]} c={color} solid />
       <Box p={[0, 1.82, 5]} s={[14.25, 3.65, 0.24]} c={color} solid />
       {[-7, 7].map((x) => (
         <group key={x}>
           <Box p={[x, 1.82, 0]} s={[0.24, 3.65, 10]} c={color} solid />
           <Box p={[x * 0.98, 0.17, 0]} s={[0.1, 0.26, 10]} c="#e5dbcd" />
-          {[-2.9, 0, 2.9].map((z) => (
+          {(theme ? [-3.2, 3.2] : [-2.9,0,2.9]).map((z) => (
             <group
               key={z}
               position={[x * 0.977, 1.99, z]}
               rotation-y={x > 0 ? -Math.PI / 2 : Math.PI / 2}
             >
               <Box s={[2.06, 1.49, 0.12]} c="#e9e8d9" />
-              <Box p={[0, 0, 0.077]} s={[1.88, 1.27, 0.018]} c="#b7dbe4" />
+              <Box p={[0, 0, 0.077]} s={[1.88, 1.27, 0.018]} c={room === 10 ? "#080b14" : "#b7dbe4"} />
+              {room === 10 && <SpaceWindow/>}
               <Box p={[0, 0, 0.093]} s={[0.065, 1.32, 0.019]} c="#eff0dd" />
               <Box p={[0, -0.78, 0.105]} s={[2.19, 0.1, 0.25]} c="#f4e8d2" />
             </group>
@@ -397,7 +395,7 @@ export function Interior({
         </group>
       ))}
       {[-3, 0, 3].map((x) => (
-        <Box key={x} p={[x, 3.59, 0]} s={[1.64, 0.06, 0.38]} c="#fff9df" />
+        <Box key={x} p={[x, 3.59, 0]} s={[1.64, 0.06, 0.38]} c={theme?.accent ?? "#fff9df"} />
       ))}
       {links[room].map((target, i) => (
         <group
@@ -410,7 +408,8 @@ export function Interior({
           }}
         >
           <group scale={[corridor ? 0.83 : 1, 1, 1]}>
-            <Box p={[0, 1.22, 0.03]} s={[1.56, 2.44, 0.14]} c="#e9ddca" />
+            <Box p={[0, 1.22, 0.03]} s={[1.56, 2.44, 0.14]} c={themes[target]?.accent ?? "#e9ddca"} />
+            {themes[target] && <Label p={[0,1.85,.2]} w={.76} h={.55} text={themes[target].icon + "  " + rooms[target].door}/>}
             <Box p={[0, 1.16, 0.12]} s={[1.36, 2.28, 0.08]} c="#694f41" />
             <Box p={[0, 1.62, 0.171]} s={[0.87, 0.88, 0.026]} c="#557d91" />
             <Box p={[0.51, 1.01, 0.19]} s={[0.17, 0.075, 0.11]} c="#e5af6c" />
@@ -454,7 +453,8 @@ export function Interior({
               fg={entry ? "#fff" : "#2c5866"}
             />
           )}
-          {posters && <WallPosters posters={posters} />}
+          {posters && <group onClick={e=>{e.stopPropagation();openLessonVideo()}}><WallPosters posters={posters} /></group>}
+          {theme && markers && !video && <Marker p={[0,1.35,-4.63]} action={openLessonVideo}>{posters ? translate(["View poster","Постерді көру","Посмотреть плакат"],lang) : translate(["Open task","Тапсырманы ашу","Открыть задание"],lang)}</Marker>}
           {room === 5 && (
             <Label
               p={[-4.55, 2.24, -4.84]}
@@ -471,60 +471,14 @@ export function Interior({
               w={2.65}
               h={1.4}
               art={room === techRoom ? "grid" : undefined}
-              text={room === techRoom ? "TECH REVIEW 2050\nVirtual assistant" : "RECORDING STUDIO\nVoice & sound effects"}
-              bg={room === techRoom ? "#245c63" : "#641e32"}
+              text={room === techRoom ? "TECH REVIEW 2050\nVirtual assistant" : "MISSION CONTROL\nVoice & sound effects"}
+              bg={room === techRoom ? "#245c63" : "#172554"}
             />
           )}
-          {room === 3 && (
-            <>
-              <Box p={[0, 1.49, -4.8]} s={[4.9, 0.08, 0.19]} c="#eae1d1" />
-              <Box p={[1.7, 1.55, -4.75]} s={[0.24, 0.045, 0.09]} c="#5b837d" />
-              <Box
-                p={[-4.95, 0.91, -3.2]}
-                s={[1.56, 0.14, 0.75]}
-                c={wood}
-                solid
-              />
-              <Box p={[-4.95, 0.47, -3.2]} s={[1.44, 0.84, 0.62]} c="#a97850" />
-              <Box
-                p={[-4.77, 1.01, -3.15]}
-                s={[0.46, 0.07, 0.34]}
-                c="#567e91"
-              />
-            </>
-          )}
-          {room === 4 && (
-            <group position={[4.8, 0.82, -3.25]}>
-              <Box p={[0, -0.42, 0]} s={[1.45, 0.8, 0.78]} c="#435e6a" solid />
-              <Box s={[1.53, 0.1, 0.85]} c="#648b97" />
-              <Box p={[0.36, 0.34, 0]} s={[0.055, 0.68, 0.055]} c="#263949" />
-              <Box p={[0.08, 0.68, 0]} s={[0.61, 0.06, 0.06]} c="#263949" />
-              <Box p={[-0.19, 0.46, 0]} s={[0.022, 0.45, 0.022]} c="#eee6d8" />
-              <Orb p={[-0.19, 0.24, 0]} s={[0.12, 0.12, 0.12]} c="#d9a54d" />
-            </group>
-          )}
-          {room === 6 &&
-            [-4.5, -2.2, 2.2, 4.5].map((x) => (
-              <Shelf key={x} p={[x, 0, -4.58]} />
-            ))}
-          {!entry &&
-            [-3, 3].flatMap((x) =>
-              [-0.9, 1.57].map((z) => (
-                <group key={x + "," + z}>
-                  <Desk p={[x, 0, z]} lab={room === 4 || room === 5} />
-                  {room === 5 && (
-                    <group position={[x, 0, z]}>
-                      <Exhibit room={room} />
-                    </group>
-                  )}
-                  {room === 7 && (
-                    <group position={[x, 0, z]}>
-                      <Orb p={[0, 1, 0]} s={[0.33, 0.24, 0.25]} c="#bd8048" />
-                    </group>
-                  )}
-                </group>
-              )),
-            )}
+          {theme && <>
+            <GalleryPanel room={room} side={0}/><GalleryPanel room={room} side={1}/>
+            <RoomExhibits room={room} />
+          </>}
           {entry &&
             [-5.45, 5.45].map((x) => (
               <Box

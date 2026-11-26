@@ -435,26 +435,26 @@ export function Desk({ p, lab = false }: { p: XYZ; lab?: boolean }) {
   );
 }
 export function Shelf({ p }: { p: XYZ }) {
+  const books = useRef<InstancedMesh>(null!);
+  useLayoutEffect(() => {
+    const matrix = new Matrix4();
+    const colors = ["#c79c67", "#437677", "#b06351", "#d7c8a3", "#537796"];
+    for (let index = 0; index < 44; index++) {
+      const row = Math.floor(index / 11), col = index % 11;
+      const height = .29 + (col % 3) * .07;
+      matrix.makeScale(.145, height, .18);
+      matrix.setPosition((col - 5) * .181, .29 + row * .57 + height / 2, .33);
+      books.current.setMatrixAt(index, matrix);
+      books.current.setColorAt(index, new Color(colors[(col + row * 2) % colors.length]));
+    }
+    books.current.instanceMatrix.needsUpdate = true;
+    books.current.computeBoundingSphere();
+  }, []);
   return (
     <group position={p}>
       <Box p={[0, 1.14, 0]} s={[2.21, 2.3, 0.44]} c="#795b48" solid />
-      {[0.25, 0.82, 1.39, 1.96].map((y, row) => (
-        <group key={y}>
-          <Box p={[0, y, 0.2]} s={[2.25, 0.075, 0.47]} c={wood} />
-          {Array.from({ length: 11 }, (_, i) => (
-            <Box
-              key={i}
-              p={[(i - 5) * 0.181, y + 0.2, 0.33]}
-              s={[0.145, 0.29 + (i % 3) * 0.07, 0.18]}
-              c={
-                ["#c79c67", "#437677", "#b06351", "#d7c8a3", "#537796"][
-                  (i + row * 2) % 5
-                ]
-              }
-            />
-          ))}
-        </group>
-      ))}
+      {[.25,.82,1.39,1.96].map(y => <Box key={y} p={[0,y,.2]} s={[2.25,.075,.47]} c={wood}/>)}
+      <instancedMesh ref={books} args={[undefined,undefined,44]}><boxGeometry/><meshStandardMaterial/></instancedMesh>
     </group>
   );
 }

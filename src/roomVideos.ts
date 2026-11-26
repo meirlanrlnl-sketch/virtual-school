@@ -13,7 +13,7 @@ export type RoomVideo = {
 const videos = import.meta.env.BASE_URL + "videos/";
 export const roomVideos: Partial<Record<number, RoomVideo>> = {
   [readingRoom]: {
-    title: "The Reading Room — Literary Storyboards",
+    title: "Reading for Pleasure — Literary Storyboards",
     src: videos + "door-3-reading-room.mp4",
     poster: videos + "door-3-reading-room.jpg",
     heading: ["Watch the Explanation Video", "Түсіндірме видеоны көру", "Смотреть видеоинструкцию"],

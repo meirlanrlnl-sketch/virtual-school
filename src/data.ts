@@ -74,7 +74,7 @@ export const rooms: Room[] = [
     ],
   },
   {
-    name: ["The Mythbuster Lab", "Мифтерді тексеру зертханасы", "Лаборатория проверки мифов"],
+    name: ["Science", "Ғылым", "Наука"],
     door: 1,
     assignment: {
       module: "Module 1 · Science",
@@ -100,7 +100,7 @@ export const rooms: Room[] = [
     ],
   },
   {
-    name: ["The Disaster Zone", "Апат аймағы", "Зона стихийных бедствий"],
+    name: ["Natural Disasters", "Табиғи апаттар", "Стихийные бедствия"],
     door: 2,
     assignment: {
       module: "Module 2 · Natural Disasters",
@@ -126,7 +126,7 @@ export const rooms: Room[] = [
     ],
   },
   {
-    name: ["The Reading Room", "Оқу залы", "Читальный зал"],
+    name: ["Reading for Pleasure", "Қызығушылықпен оқу", "Чтение для удовольствия"],
     door: 3,
     assignment: {
       module: "Module 5 · Reading for Pleasure",
@@ -152,7 +152,7 @@ export const rooms: Room[] = [
     ],
   },
   {
-    name: ["The Eco-Dome", "Эко-күмбез", "Экокупол"],
+    name: ["Organic & Non-organic", "Органикалық және органикалық емес", "Органическое и неорганическое"],
     door: 4,
     assignment: {
       module: "Module 4 · Organic & Non-organic",
@@ -178,7 +178,7 @@ export const rooms: Room[] = [
     ],
   },
   {
-    name: ["The Brain Center", "Миды зерттеу орталығы", "Центр изучения мозга"],
+    name: ["Human Brain", "Адам миы", "Мозг человека"],
     door: 5,
     assignment: {
       module: "Module 6 · Human Brain",
@@ -232,7 +232,7 @@ export const rooms: Room[] = [
     ],
   },
   {
-    name: ["The Tech Arena", "Технологиялар аренасы", "Арена технологий"],
+    name: ["Breakthrough Technologies", "Серпінді технологиялар", "Прорывные технологии"],
     door: 6,
     assignment: {
       module: "Module 7 · Breakthrough Technologies",
@@ -254,7 +254,7 @@ export const rooms: Room[] = [
     options: ["Interview a virtual assistant", "Read the noticeboard", "Borrow a novel"],
   },
   {
-    name: ["The Cinema Studio", "Киностудия", "Киностудия"],
+    name: ["Space", "Ғарыш", "Космос"],
     door: 7,
     assignment: {
       module: "Movie Dubbing, Shadowing and Sound Effects",
