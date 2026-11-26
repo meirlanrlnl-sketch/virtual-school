@@ -1,4 +1,8 @@
+import { roomPosters, type RoomPosters } from "./roomPosters";
 import { Fragment } from "react";
+import { useTexture } from "@react-three/drei";
+import { SRGBColorSpace } from "three";
+import { roomVideos, type RoomVideo } from "./roomVideos";
 import {
   Box,
   Desk,
@@ -15,13 +19,24 @@ import {
 } from "./geometry";
 import { StoryStudio } from "./storytelling/Studio";
 import type { Zone } from "./storytelling/content";
-import { links, rooms, storytellingRoom, translate, type Lang } from "./data";
+import {
+  doorPrefix,
+  links,
+  roomLabel,
+  rooms,
+  cinemaRoom,
+  storytellingRoom,
+  techRoom,
+  translate,
+  type Lang,
+} from "./data";
 export type SceneActions = {
   room: number;
   lang: Lang;
   go: (n: number) => void;
   interact: (kind: "guide" | "word") => void;
   openStory: (zone: Zone) => void;
+  openLessonVideo: () => void;
   markers: boolean;
   talking: boolean;
   blocked: boolean;
@@ -184,7 +199,7 @@ export function Courtyard({
       {markers && (
         <>
           <Marker p={[0, 2.27, 0.52]} action={() => go(1)}>
-            {translate(rooms[1].name, lang)}
+            {roomLabel(1, lang)}
           </Marker>
           <Marker p={[-1.53, 2.1, 3.6]} action={() => interact("guide")}>
             Alex
@@ -198,7 +213,65 @@ export function Courtyard({
   );
 }
 const woods = ["#c18e64", "#cba077", "#bc895f", "#c29971", "#d0a47a"];
+function WallPosters({ posters: items }: { posters: RoomPosters }) {
+  const posters = useTexture(items.map(poster => poster.src));
+  return <>{posters.map((poster, i) => {
+    poster.colorSpace = SRGBColorSpace;
+    return <mesh key={poster.uuid} position={[i === 0 ? -4.55 : 4.55, 2.24, -4.84]}>
+      <planeGeometry args={[2.2 * poster.image.width / poster.image.height, 2.2]} />
+      <meshBasicMaterial map={poster} toneMapped={false} />
+    </mesh>;
+  })}</>;
+}
+function LessonScreen({
+  room, video, lang, markers, openLessonVideo,
+}: Pick<SceneActions, "room" | "lang" | "markers" | "openLessonVideo"> & { video: RoomVideo }) {
+  const poster = useTexture(video.poster);
+  poster.colorSpace = SRGBColorSpace;
+  const width = 2.28 * poster.image.width / poster.image.height;
+  const frameColor = room === cinemaRoom ? "#641e32" : "#12263c";
+  return (
+    <group
+      position={[0, 2, -4.79]}
+      onClick={(e) => {
+        e.stopPropagation();
+        openLessonVideo();
+      }}
+    >
+      <Box s={[width + 0.14, 2.4, 0.14]} c={frameColor} />
+      <mesh position={[0, 0, 0.08]}>
+        <planeGeometry args={[width, 2.28]} />
+        <meshBasicMaterial map={poster} toneMapped={false} />
+      </mesh>
+      <Label p={[0, 1.4, 0.08]} w={width + 0.14} h={0.32} text={rooms[room].name[0].toUpperCase()} bg={frameColor} />
+      {markers && (
+        <Marker p={[0, -0.87, 0.15]} action={openLessonVideo}>
+          {"▶ " + translate(video.heading, lang)}
+        </Marker>
+      )}
+    </group>
+  );
+}
 function Exhibit({ room }: { room: number }) {
+  if (room === techRoom)
+    return (
+      <group position={[0, 0.83, 0]}>
+        <Box p={[0, 0.09, 0]} s={[0.38, 0.18, 0.28]} c={ink} />
+        <Box p={[0, 0.34, 0]} s={[0.54, 0.34, 0.3]} c="#aed6ce" />
+        <Box p={[0, 0.34, 0.16]} s={[0.44, 0.22, 0.025]} c="#233f4c" />
+        {[-0.12, 0.12].map((x) => (
+          <Orb key={x} p={[x, 0.36, 0.185]} s={[0.04, 0.045, 0.025]} c="#82f2cb" />
+        ))}
+      </group>
+    );
+  if (room === cinemaRoom)
+    return (
+      <group position={[0, 0.83, 0]}>
+        <Box p={[0, 0.025, 0]} s={[0.32, 0.05, 0.24]} c={ink} />
+        <Box p={[0, 0.18, 0]} s={[0.045, 0.32, 0.045]} c="#bdc9dc" />
+        <Orb p={[0, 0.41, 0]} s={[0.1, 0.17, 0.1]} c="#54637a" detail={2} />
+      </group>
+    );
   if (room <= 2)
     return (
       <>
@@ -275,9 +348,12 @@ export function Interior({
   markers,
   talking,
   openStory,
+  openLessonVideo,
   blocked,
 }: SceneActions) {
   const studio = room === storytellingRoom;
+  const video = roomVideos[room];
+  const posters = roomPosters[room];
   const entry = room <= 2,
     color = studio
       ? "#e8dfd3"
@@ -285,22 +361,15 @@ export function Interior({
         ? "#927263"
         : room === 6
           ? "#769087"
-          : "#659bc1",
+          : room === cinemaRoom ? "#534355" : "#659bc1",
     thisRoom = rooms[room];
-  const doorXs = links[room].map(
-    (_, i) => (i - (links[room].length - 1) / 2) * (room === 2 ? 1.93 : 3),
-  );
+  const corridor = room === 2;
+  const spacing = corridor ? 1.5 : 3;
+  const exhibitX = corridor ? 4.95 : 1.7;
+  const guideX = corridor ? -4.85 : -1.4;
   const doorZ = entry ? -4.86 : 4.86;
-  const title = [
-    "",
-    "NOTICEBOARD",
-    "FIND YOUR CLASS",
-    "HELLO, WORLD!",
-    "MOTION & MATTER",
-    "THINK IN CODE",
-    "STORIES & WORDS",
-    "HERITAGE OF KAZAKHSTAN",
-  ][room];
+  const title =
+    thisRoom.assignment?.module ?? (corridor ? "FIND YOUR CLASS" : "NOTICEBOARD");
   return (
     <>
       <color attach="background" args={["#b1cdd9"]} />
@@ -333,30 +402,32 @@ export function Interior({
       {links[room].map((target, i) => (
         <group
           key={target}
-          position={[doorXs[i], 0, doorZ]}
+          position={[(i - (links[room].length - 1) / 2) * spacing, 0, doorZ]}
           rotation-y={entry ? 0 : Math.PI}
           onClick={(e) => {
             e.stopPropagation();
             go(target);
           }}
         >
-          <Box p={[0, 1.22, 0.03]} s={[1.56, 2.44, 0.14]} c="#e9ddca" />
-          <Box p={[0, 1.16, 0.12]} s={[1.36, 2.28, 0.08]} c="#694f41" />
-          <Box p={[0, 1.62, 0.171]} s={[0.87, 0.88, 0.026]} c="#557d91" />
-          <Box p={[0.51, 1.01, 0.19]} s={[0.17, 0.075, 0.11]} c="#e5af6c" />
+          <group scale={[corridor ? 0.83 : 1, 1, 1]}>
+            <Box p={[0, 1.22, 0.03]} s={[1.56, 2.44, 0.14]} c="#e9ddca" />
+            <Box p={[0, 1.16, 0.12]} s={[1.36, 2.28, 0.08]} c="#694f41" />
+            <Box p={[0, 1.62, 0.171]} s={[0.87, 0.88, 0.026]} c="#557d91" />
+            <Box p={[0.51, 1.01, 0.19]} s={[0.17, 0.075, 0.11]} c="#e5af6c" />
+          </group>
           <Label
             p={[0, 2.73, 0.16]}
-            w={1.9}
+            w={corridor ? 1.48 : 1.9}
             h={0.37}
-            text={
-              target === storytellingRoom && lang === "en"
-                ? "DIGITAL STORYTELLING\nCLASSROOM"
-                : translate(rooms[target].name, lang)
-            }
+            text={translate(rooms[target].name, lang)}
           />
           {markers && (
-            <Marker p={[0, 1.28, 0.28]} action={() => go(target)}>
-              {translate(rooms[target].name, lang)}
+            <Marker
+              p={[0, 1.28, 0.28]}
+              label={roomLabel(target, lang)}
+              action={() => go(target)}
+            >
+              {doorPrefix(target, lang) || translate(rooms[target].name, lang)}
             </Marker>
           )}
         </group>
@@ -371,56 +442,38 @@ export function Interior({
         />
       ) : (
         <>
-          <Label
-            p={[0, entry ? 3.26 : 2.28, -4.84]}
-            w={entry ? 4.4 : 5.4}
-            h={entry ? 0.43 : 1.42}
-            text={title}
-            bg={entry ? ink : "#f4eee2"}
-            fg={entry ? "#fff" : "#2c5866"}
-          />
-          {room === 3 && (
+          {video ? (
+            <LessonScreen room={room} video={video} lang={lang} markers={markers} openLessonVideo={openLessonVideo} />
+          ) : (
             <Label
-              p={[-4.55, 2.24, -4.84]}
-              w={2.7}
-              h={1.4}
-              art="map"
-              text={"WORLD MAP\nFind Kazakhstan"}
-              bg="#267e89"
+              p={[0, entry ? 3.26 : 2.28, -4.84]}
+              w={entry ? 4.4 : 5.4}
+              h={entry ? 0.43 : 1.42}
+              text={title}
+              bg={entry ? ink : "#f4eee2"}
+              fg={entry ? "#fff" : "#2c5866"}
             />
           )}
-          {room === 4 && (
-            <Label
-              p={[-4.55, 2.24, -4.84]}
-              w={2.7}
-              h={1.4}
-              art="atom"
-              text={"PHYSICS\nForce • Energy • Light"}
-              bg="#224057"
-            />
-          )}
+          {posters && <WallPosters posters={posters} />}
           {room === 5 && (
             <Label
               p={[-4.55, 2.24, -4.84]}
               w={2.7}
               h={1.4}
               art="grid"
-              text={"COMPUTER SCIENCE\nInput • Process • Output"}
+              text={"PAGE TO SCREEN\nCharacters • Locations • Quotes"}
               bg="#2d4772"
             />
           )}
-          {room === 7 && (
-            <>
-              <Flag p={[-4.65, 2.3, -4.81]} />
-              <Label
-                p={[4.67, 2.24, -4.84]}
-                w={2.6}
-                h={1.4}
-                art="mountain"
-                text={"THE KAZAKH STEPPE\nLand & heritage"}
-                bg="#554236"
-              />
-            </>
+          {(room === techRoom || room === cinemaRoom) && (
+            <Label
+              p={[-4.65, 2.24, -4.84]}
+              w={2.65}
+              h={1.4}
+              art={room === techRoom ? "grid" : undefined}
+              text={room === techRoom ? "TECH REVIEW 2050\nVirtual assistant" : "RECORDING STUDIO\nVoice & sound effects"}
+              bg={room === techRoom ? "#245c63" : "#641e32"}
+            />
           )}
           {room === 3 && (
             <>
@@ -483,7 +536,7 @@ export function Interior({
               />
             ))}
           <group
-            position={[1.7, 0, entry ? -1.4 : -3.13]}
+            position={[exhibitX, 0, entry ? -1.4 : -3.13]}
             onClick={(e) => {
               e.stopPropagation();
               interact("word");
@@ -498,14 +551,14 @@ export function Interior({
             )}
           </group>
           <Person
-            p={[-1.4, 0, entry ? -1.6 : -3.34]}
+            p={[guideX, 0, entry ? -1.6 : -3.34]}
             color={thisRoom.color}
             talking={talking}
             onClick={() => interact("guide")}
           />
           {markers && (
             <Marker
-              p={[-1.4, 2.02, entry ? -1.6 : -3.34]}
+              p={[guideX, 2.02, entry ? -1.6 : -3.34]}
               action={() => interact("guide")}
             >
               {thisRoom.guide}

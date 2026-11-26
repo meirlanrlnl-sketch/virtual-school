@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Clapperboard, MonitorPlay } from "lucide-react";
+import { Clapperboard } from "lucide-react";
 import {
   media,
   poster,
@@ -363,7 +363,16 @@ function Guide({ open }: { open: (zone: Zone) => void }) {
     </>
   );
 }
+const feedbackPages = [
+  "The exit — project cover with a QR code",
+  "Feedback — Where did you get lost? Best part?",
+  "Reflection — What did we learn? AI contribution",
+  "Closing slide with emoji reactions",
+];
+
 function Screening() {
+  const [page, setPage] = useState(0);
+  const image = import.meta.env.BASE_URL + "storytelling/feedback/page-" + (page + 1) + ".jpg";
   const video = useRef<HTMLVideoElement>(null);
   const [broken, setBroken] = useState(false);
   const [answers, setAnswers, saved] = useDraft<string[]>(
@@ -372,7 +381,15 @@ function Screening() {
   );
   return (
     <>
-      {__STORY_VIDEO__ && !broken ? (
+      <a href={image} target="_blank" rel="noreferrer" title="View full-size example">
+        <img className="story-poster" src={image} alt={feedbackPages[page]} />
+      </a>
+      <nav className="story-actions" aria-label="Example pages">
+        <button className="secondary" disabled={page === 0} onClick={() => setPage(page - 1)}>Previous</button>
+        <span aria-live="polite">Page {page + 1} of {feedbackPages.length}</span>
+        <button className="secondary" disabled={page === feedbackPages.length - 1} onClick={() => setPage(page + 1)}>Next</button>
+      </nav>
+      {__STORY_VIDEO__ && !broken && (
         <>
           <video
             ref={video}
@@ -424,20 +441,6 @@ function Screening() {
             </label>
           </div>
         </>
-      ) : (
-        <div className="story-screen-placeholder">
-          <MonitorPlay size={36} />
-          <strong>
-            {broken
-              ? "This video could not play on this device."
-              : "The example video is waiting to be added."}
-          </strong>
-          <p>
-            Add <code>storytelling-example.mp4</code> to{" "}
-            <code>public/videos</code> and rebuild the school. MP4 works on most
-            devices.
-          </p>
-        </div>
       )}
       <h3>Think About the Story</h3>
       <p>

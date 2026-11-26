@@ -27,6 +27,30 @@
 .modal.story-modal:not(.dialogue) {
   max-width: min(680px, calc(100% - 26px));
 }
+.modal.cinema-modal {
+  background: #1e1824f7;
+  border-color: #d4af3770;
+  color: #f5f3ef;
+}
+.cinema-modal .primary {
+  background: #ead391;
+  color: #281d20;
+  border-color: #d4af37;
+}
+.cinema-modal .story-card {
+  background: #282039;
+  border-color: #d4af3745;
+}
+.cinema-modal blockquote {
+  border-color: #d4af37;
+  background: #641e324d;
+}
+.cinema-steps {
+  padding-left: 1.6em;
+}
+.cinema-steps li + li {
+  margin-top: 0.8em;
+}
 .story-stack {
   display: grid;
   gap: 15px;
@@ -288,4 +312,23 @@ fieldset.story-fields {
   .story-lesson article.story-card {
     animation: none;
   }
+}
+
+.storyboard-preview {
+  overflow: auto;
+  max-height: 50dvh;
+  min-width: 0;
+  background: white;
+  border-radius: 8px;
+}
+.storyboard-preview img {
+  display: block;
+  max-width: none;
+}
+
+.disaster-poster {
+  display: block;
+  width: 100%;
+  height: min(53dvh, 660px);
+  object-fit: contain;
 }

@@ -393,14 +393,16 @@ export function Marker({
   p,
   children,
   action,
+  label,
 }: {
   p: XYZ;
   children: string;
   action: () => void;
+  label?: string;
 }) {
   return (
     <Html position={p} center occlude>
-      <button className="marker" onClick={action}>
+      <button className="marker" onClick={action} aria-label={label} title={label}>
         {children}
       </button>
     </Html>

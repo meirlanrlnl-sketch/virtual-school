@@ -344,6 +344,40 @@ blockquote {
 .location small {
   margin: 0 0 3px;
 }
+.assignment-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+  padding: 4px 0;
+  background: transparent;
+  color: var(--mint);
+  border: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+.assignment-link:hover {
+  text-decoration: underline;
+}
+.assignment-details {
+  margin: 0;
+  line-height: 1.5;
+}
+.assignment-details dt {
+  margin-top: 14px;
+  color: var(--mint);
+  font-weight: 700;
+}
+.assignment-details dd {
+  margin: 2px 0 0;
+}
+.assignment-details ol {
+  margin: 0;
+  padding-left: 1.5em;
+}
+.assignment-details li + li {
+  margin-top: 6px;
+}
 .mission {
   right: 4.5%;
   top: 88px;
@@ -387,7 +421,7 @@ blockquote {
   height: 64px;
   margin: 9px 0 2px;
   display: grid;
-  grid-template: repeat(3, 1fr) / repeat(5, 1fr);
+  grid-template: repeat(3, 1fr) / repeat(7, 1fr);
   gap: 3px;
 }
 .map-grid i {
@@ -766,6 +800,9 @@ textarea {
   }
   .location-icon {
     display: none;
+  }
+  .location {
+    max-width: 49%;
   }
   .location strong,
   .mission strong {

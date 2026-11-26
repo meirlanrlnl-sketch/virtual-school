@@ -38,8 +38,8 @@ export const zones = [
   {
     id: "video",
     short: ["Watch example", "Үлгіні көр", "Смотреть пример"],
-    name: ["Example Storytelling Video", "Бейне үлгісі", "Пример видеоистории"],
-    title: "Watch an Example Digital Story",
+    name: ["Watch example", "Үлгіні көру", "Посмотреть пример"],
+    title: "Watch example",
     icon: Film,
   },
   {
@@ -68,7 +68,7 @@ export const poster =
   import.meta.env.BASE_URL + "storytelling/youre-not-alone.jpg";
 
 export const teacherLines = [
-  "Hello, students! Welcome to our Digital Storytelling Classroom!",
+  "Hello, students! Welcome to The Feedback, our digital storytelling studio!",
   "Today, you are going to learn how to create your own digital story.",
   "Digital storytelling is a creative way to share your ideas, experiences, and emotions using pictures, videos, music, and your voice.",
   "First, explore the storytelling guide. Then, watch an example video. Finally, create your own digital story and submit it to your teacher.",

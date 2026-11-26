@@ -33,14 +33,26 @@ import {
   X,
 } from "lucide-react";
 import {
+  readingRoom,
+  cinemaRoom,
+  corridorDoors,
   orderedAnswers,
+  roomLabel,
   rooms,
   storytellingRoom,
+  techRoom,
+  tourRooms,
   translate,
   type Lang,
   type Translation,
 } from "./data";
 import { panoramas } from "./panoramas";
+import LessonVideo from "./LessonVideo";
+import { roomVideos } from "./roomVideos";
+import { PosterLesson } from "./PosterLesson";
+import { roomPosters } from "./roomPosters";
+import { StoryboardExample } from "./StoryboardExample";
+import { CinemaTask, cinemaChecklist } from "./CinemaTask";
 import type { Mode, Motion } from "./World";
 import "./style.css";
 import { zones, type Zone } from "./storytelling/content";
@@ -54,6 +66,10 @@ type Panel =
   | "pause"
   | "map"
   | "mission"
+  | "assignment"
+  | "lessonVideo"
+  | "posters"
+  | "storyboardExample"
   | "guide"
   | "word"
   | "quiz"
@@ -66,6 +82,9 @@ type Progress = {
   quizzes: number[];
   presentation: string;
   lastRoom: number;
+  readingVideoWatched: boolean;
+  cinemaVideoWatched: boolean;
+  cinemaChecks: number[];
 };
 const blank: Progress = {
   visited: [],
@@ -74,6 +93,9 @@ const blank: Progress = {
   quizzes: [],
   presentation: "",
   lastRoom: 0,
+  readingVideoWatched: false,
+  cinemaVideoWatched: false,
+  cinemaChecks: [],
 };
 const storage = "virtual-school-progress-v1";
 const intersects = (list: number[], id: number) =>
@@ -82,12 +104,12 @@ function loadProgress(): Progress {
   try {
     const data = JSON.parse(localStorage.getItem(storage) ?? "null");
     if (!data) return blank;
-    const ids = (value: unknown) =>
+    const ids = (value: unknown, count = rooms.length) =>
       Array.isArray(value)
         ? [
             ...new Set(
               value.filter(
-                (n) => Number.isInteger(n) && n >= 0 && n < rooms.length,
+                (n) => Number.isInteger(n) && n >= 0 && n < count,
               ),
             ),
           ]
@@ -100,6 +122,9 @@ function loadProgress(): Progress {
       presentation:
         typeof data.presentation === "string" ? data.presentation : "",
       lastRoom: ids([data.lastRoom])[0] ?? ids(data.visited).at(-1) ?? 0,
+      readingVideoWatched: data.readingVideoWatched === true,
+      cinemaVideoWatched: data.cinemaVideoWatched === true,
+      cinemaChecks: ids(data.cinemaChecks, cinemaChecklist.length),
     };
   } catch {
     return blank;
@@ -111,12 +136,14 @@ function Modal({
   children,
   dialogue = false,
   storytelling = false,
+  cinema = false,
 }: {
   title: string;
   close: () => void;
   children: ReactNode;
   dialogue?: boolean;
   storytelling?: boolean;
+  cinema?: boolean;
 }) {
   const modal = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -125,7 +152,7 @@ function Modal({
   return (
     <dialog
       ref={modal}
-      className={`modal${dialogue ? " dialogue" : ""}${storytelling ? " story-modal" : ""}`}
+      className={`modal${dialogue ? " dialogue" : ""}${storytelling ? " story-modal" : ""}${cinema ? " cinema-modal" : ""}`}
       aria-labelledby="panel-title"
       onCancel={(e) => {
         e.preventDefault();
@@ -213,9 +240,12 @@ function App() {
   const joystick = useRef<Motion>({ x: 0, y: 0 });
   const L = (en: string, kk: string, ru: string) =>
     translate([en, kk, ru], lang);
-  const roomName = (n: number) => translate(rooms[n].name, lang);
+  const roomName = (n: number) => roomLabel(n, lang);
+  const tourIndex = tourRooms.indexOf(room);
   const current = rooms[room],
     started = progress.visited.length > 0;
+  const lessonVideo = roomVideos[room];
+  const posters = roomPosters[room];
   const points =
     progress.visited.length * 5 +
     progress.guides.length * 5 +
@@ -262,7 +292,7 @@ function App() {
     if (next < 0 || next >= rooms.length) return;
     if (mode === "panorama") setMode("tour");
     setRoom(next);
-    changePanel();
+    changePanel(roomPosters[next] ? "posters" : roomVideos[next] ? "lessonVideo" : undefined);
     setMenu(false);
     setProgress((p) => ({
       ...p,
@@ -351,11 +381,16 @@ function App() {
         " Try using “" +
         current.item[0].toLowerCase() +
         "” in a sentence about your own school.";
+  const roomHeading: Translation = [roomLabel(room, "en"), roomLabel(room, "kk"), roomLabel(room, "ru")];
   const headings: Record<Panel, Translation> = {
     help: ["How to play", "Басқару", "Как играть"],
     settings: ["Settings", "Баптаулар", "Настройки"],
     pause: ["Paused", "Үзіліс", "Пауза"],
     map: ["Campus map", "Мектеп картасы", "Карта школы"],
+    assignment: roomHeading,
+    lessonVideo: roomHeading,
+    posters: roomHeading,
+    storyboardExample: roomHeading,
     mission: [
       "Explore Your Virtual School",
       "Виртуалды мектебіңді зертте",
@@ -394,6 +429,7 @@ function App() {
             go={go}
             interact={interact}
             openStory={openStory}
+            openLessonVideo={() => changePanel("lessonVideo")}
             markers={!menu && mode !== "panorama"}
             talking={panel === "guide" || storyTalking}
             pano={pano}
@@ -527,6 +563,24 @@ function App() {
                   ? (panoramas[pano]?.name ?? roomName(room))
                   : roomName(room)}
               </strong>
+              {lessonVideo && mode !== "panorama" && (
+                <button className="assignment-link" onClick={() => changePanel("lessonVideo")}>
+                  <Play size={15} />
+                  {translate(lessonVideo.heading, lang)}
+                </button>
+              )}
+              {posters && mode !== "panorama" && (
+                <button className="assignment-link" onClick={() => changePanel("posters")}>
+                  <BookOpen size={15} />{posters.length === 1 ? L("View poster", "Постерді көру", "Посмотреть плакат") : L("View posters", "Постерлерді көру", "Посмотреть плакаты")}
+                </button>
+              )}
+              {!posters && room !== readingRoom && current.assignment && (!lessonVideo?.requiresCompletion || progress.cinemaVideoWatched) && mode !== "panorama" && (
+                <button className="assignment-link" onClick={() => changePanel("assignment")}>
+                  <BookOpen size={15} />
+                  {L("Door task", "Есік тапсырмасы", "Задание")}
+                  <ChevronRight size={15} />
+                </button>
+              )}
             </span>
           </div>
           <button
@@ -566,15 +620,17 @@ function App() {
                   key={r.guide}
                   style={{
                     gridArea: [
-                      "3 / 2",
-                      "2 / 2",
+                      "3 / 3",
                       "2 / 3",
+                      "2 / 4",
                       "1 / 1",
                       "1 / 2",
                       "1 / 3",
                       "1 / 4",
                       "1 / 5",
-                      "2 / 5",
+                      "2 / 7",
+                      "1 / 6",
+                      "1 / 7",
                     ][i],
                   }}
                 />
@@ -649,9 +705,9 @@ function App() {
             <button
               className="icon"
               aria-label="Previous location"
-              disabled={mode === "panorama" ? pano === 0 : room === 0}
+              disabled={mode === "panorama" ? pano === 0 : tourIndex === 0}
               onClick={() =>
-                mode === "panorama" ? setPano(pano - 1) : go(room - 1)
+                mode === "panorama" ? setPano(pano - 1) : go(tourRooms[tourIndex - 1])
               }
             >
               <ChevronLeft size={20} />
@@ -660,7 +716,7 @@ function App() {
               <Compass size={16} />
               {mode === "panorama"
                 ? pano + 1 + " / " + panoramas.length
-                : room + 1 + " / " + rooms.length}
+                : tourIndex + 1 + " / " + tourRooms.length}
             </button>
             <button
               className="icon"
@@ -668,10 +724,10 @@ function App() {
               disabled={
                 mode === "panorama"
                   ? pano === panoramas.length - 1
-                  : room === rooms.length - 1
+                  : tourIndex === tourRooms.length - 1
               }
               onClick={() =>
-                mode === "panorama" ? setPano(pano + 1) : go(room + 1)
+                mode === "panorama" ? setPano(pano + 1) : go(tourRooms[tourIndex + 1])
               }
             >
               <ChevronRight size={20} />
@@ -712,7 +768,8 @@ function App() {
           dialogue={
             panel === "guide" || (panel === "story" && zone === "teacher")
           }
-          storytelling={panel === "story"}
+          storytelling={panel === "story" || panel === "posters" || panel === "storyboardExample" || panel === "lessonVideo" || (room === cinemaRoom && panel === "assignment")}
+          cinema={room === cinemaRoom && (panel === "lessonVideo" || panel === "assignment")}
           title={
             panel === "story" && lang === "en" && storyTitle
               ? storyTitle
@@ -720,6 +777,24 @@ function App() {
           }
           close={() => changePanel()}
         >
+          {panel === "lessonVideo" && lessonVideo && (
+            <LessonVideo
+              key={room}
+              video={lessonVideo}
+              assignment={room === cinemaRoom ? current.assignment?.steps[0] : undefined}
+              lang={lang}
+              watched={room === readingRoom ? progress.readingVideoWatched : progress.cinemaVideoWatched}
+              onEnded={() => {
+                if (room === readingRoom) {
+                  setProgress((p) => ({ ...p, readingVideoWatched: true }));
+                  changePanel("storyboardExample");
+                } else if (lessonVideo.requiresCompletion) {
+                  setProgress((p) => ({ ...p, cinemaVideoWatched: true }));
+                } else changePanel("assignment");
+              }}
+              onTask={() => changePanel(room === readingRoom ? "storyboardExample" : "assignment")}
+            />
+          )}
           {panel === "story" && (
             <Suspense fallback={<p>Loading lesson…</p>}>
               <StoryLesson
@@ -864,13 +939,13 @@ function App() {
           )}
           {panel === "map" && (
             <div className="map-list">
-              {rooms.map((r, i) => (
+              {[0, 2, ...corridorDoors].map((i) => (
                 <button
                   className={
                     i === room ? "room-option selected" : "room-option"
                   }
                   onClick={() => go(i)}
-                  key={r.guide}
+                  key={i}
                 >
                   <MapPin size={16} />
                   {roomName(i)}
@@ -878,6 +953,67 @@ function App() {
                 </button>
               ))}
             </div>
+          )}
+          {posters && panel === "posters" && current.assignment && (
+            <PosterLesson key={room} posters={posters} lang={lang} assignment={current.assignment.steps[0]} />
+          )}
+          {room === readingRoom && panel === "storyboardExample" && (
+            <StoryboardExample lang={lang} replay={() => changePanel("lessonVideo")} openTask={() => changePanel("assignment")} />
+          )}
+          {room === readingRoom && panel === "assignment" && current.assignment && (
+            <section className="story-stack">
+              <h3 lang="en">Your task — Literary Storyboard Challenge</h3>
+              <blockquote lang="en">{current.assignment.steps[0]}</blockquote>
+              <button className="secondary" onClick={() => changePanel("storyboardExample")}>
+                {L("Review the storyboard example", "PDF үлгісін қайта көру", "Посмотреть пример ещё раз")}
+              </button>
+            </section>
+          )}
+          {panel === "assignment" && room === techRoom && current.assignment && (
+            <section className="stack">
+              <h3>{L("Your task", "Тапсырма", "Задание")}</h3>
+              <p lang="en">{current.assignment.steps[0]}</p>
+              <button className="secondary" onClick={() => changePanel("lessonVideo")}>
+                <Play size={16} />
+                {L("Watch the video again", "Видеоны қайта көру", "Посмотреть видео ещё раз")}
+              </button>
+            </section>
+          )}
+          {panel === "assignment" && room === cinemaRoom && current.assignment && (
+            <CinemaTask
+              assignment={current.assignment.steps[0]}
+              checked={progress.cinemaChecks}
+              toggle={(index) => setProgress((p) => ({
+                ...p,
+                cinemaChecks: p.cinemaChecks.includes(index)
+                  ? p.cinemaChecks.filter((i) => i !== index)
+                  : [...p.cinemaChecks, index],
+              }))}
+              replay={() => changePanel("lessonVideo")}
+            />
+          )}
+          {panel === "assignment" && !lessonVideo && current.assignment && (
+            <section lang="en">
+              <p className="role">{current.assignment.module}</p>
+              <dl className="assignment-details">
+                <dt>Role</dt>
+                <dd>{current.assignment.role}</dd>
+                <dt>Technique</dt>
+                <dd>{current.assignment.technique}</dd>
+                <dt>The task</dt>
+                <dd>
+                  {current.assignment.steps.length === 1 ? current.assignment.steps[0] : (
+                    <ol>
+                      {current.assignment.steps.map((step) => <li key={step}>{step}</li>)}
+                    </ol>
+                  )}
+                </dd>
+                <dt>Language focus</dt>
+                <dd>{current.assignment.language}</dd>
+                <dt>Artifact</dt>
+                <dd>{current.assignment.artifact}</dd>
+              </dl>
+            </section>
           )}
           {panel === "guide" && (
             <div className="stack">
