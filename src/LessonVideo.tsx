@@ -52,7 +52,7 @@ export default function LessonVideo({
         ref={player}
         className="story-video"
         aria-label={video.title}
-        src={video.src}
+        key={video.src}
         poster={video.poster}
         preload="metadata"
         controls
@@ -66,7 +66,10 @@ export default function LessonVideo({
         }}
         onError={() => setError(true)}
         onLoadedMetadata={() => setError(false)}
-      />
+      >
+        <source src={video.webm} type='video/webm; codecs="vp9, opus"' />
+        <source src={video.src} type="video/mp4" onError={() => setError(true)} />
+      </video>
       {error && (
         <p role="alert">
           The video could not play. Check your connection or open the MP4 in
