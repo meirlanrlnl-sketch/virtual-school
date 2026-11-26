@@ -159,7 +159,7 @@ export const rooms: Room[] = [
       role: "Writer / Environmentalist",
       technique: "Storybook “Diary of an Atom”",
       steps: [
-        "Write and illustrate a short story from the perspective of a molecule travelling through time. You could follow a molecule in a plastic bottle or a seed.",
+        "Write and illustrate a short story from the perspective of a molecule (e.g., a plastic bottle or a seed) traveling through time.",
       ],
       language: "Use the future simple and future perfect. For the future perfect, try “By 2050, this bottle will have decomposed.”",
       artifact: "A digital storybook that provides the narrative text for the tour.",
@@ -278,6 +278,7 @@ export const rooms: Room[] = [
 ];
 export const mythbusterRoom = 3;
 export const disasterRoom = 4;
+export const ecoRoom = 6;
 export const brainRoom = 7;
 export const readingRoom = 5;
 export const storytellingRoom = 8;

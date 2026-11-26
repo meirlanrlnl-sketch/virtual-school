@@ -33,6 +33,7 @@ import {
   X,
 } from "lucide-react";
 import {
+  ecoRoom,
   readingRoom,
   cinemaRoom,
   corridorDoors,
@@ -292,7 +293,8 @@ function App() {
     if (next < 0 || next >= rooms.length) return;
     if (mode === "panorama") setMode("tour");
     setRoom(next);
-    changePanel(roomPosters[next] ? "posters" : roomVideos[next] ? "lessonVideo" : undefined);
+    if (next === ecoRoom) changePanel("assignment");
+    else changePanel(roomPosters[next] ? "posters" : roomVideos[next] ? "lessonVideo" : undefined);
     setMenu(false);
     setProgress((p) => ({
       ...p,
@@ -994,12 +996,22 @@ function App() {
           )}
           {panel === "assignment" && !lessonVideo && current.assignment && (
             <section lang="en">
+              {room === ecoRoom && (
+                <div className="story-stack">
+                <a className="primary" href="https://gemini.google.com/share/56469572b1d8?social_preview=true&skid=15c66c32-655d-4a14-a3ef-653a041e429f" target="_blank" rel="noopener noreferrer" lang={lang}>
+                  {L("Open in Gemini ↗", "Gemini-де ашу ↗", "Открыть в Gemini ↗")}
+                </a>
+                <h3>The Task</h3>
+                <p>{current.assignment.steps[0]}</p>
+                </div>
+              )}
               <p className="role">{current.assignment.module}</p>
               <dl className="assignment-details">
                 <dt>Role</dt>
                 <dd>{current.assignment.role}</dd>
                 <dt>Technique</dt>
                 <dd>{current.assignment.technique}</dd>
+                {room !== ecoRoom && <>
                 <dt>The task</dt>
                 <dd>
                   {current.assignment.steps.length === 1 ? current.assignment.steps[0] : (
@@ -1008,6 +1020,7 @@ function App() {
                     </ol>
                   )}
                 </dd>
+                </>}
                 <dt>Language focus</dt>
                 <dd>{current.assignment.language}</dd>
                 <dt>Artifact</dt>
